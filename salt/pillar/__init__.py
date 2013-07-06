@@ -296,16 +296,17 @@ class Pillar(object):
                         for sub_sls in state.pop('include'):
                             if isinstance(sub_sls, dict):
                                 sub_sls, v = sub_sls.iteritems().next()
-                                defaults = v.get('defaults', {})
+                                sub_defaults = v.get('defaults', {})
                                 key = v.get('key', None)
                             else:
+                                sub_defaults = {}
                                 key = None
                             if sub_sls not in mods:
                                 nstate, mods, err = self.render_pstate(
                                         sub_sls,
                                         env,
                                         mods,
-                                        defaults
+                                        sub_defaults
                                         )
                             if nstate:
                                 if key:
