@@ -14,7 +14,7 @@ import salt.minion
 import salt.crypt
 from salt._compat import string_types
 from salt.template import compile_template
-from salt.utils.dictupdate import update
+from salt.utils.dictupdate import update, merge
 from salt.version import __version__
 
 log = logging.getLogger(__name__)
@@ -298,9 +298,11 @@ class Pillar(object):
                                 sub_sls, v = sub_sls.iteritems().next()
                                 sub_defaults = v.get('defaults', {})
                                 key = v.get('key', None)
+                                overlap = v.get('overlap', 'update')
                             else:
                                 sub_defaults = {}
                                 key = None
+                                overlap = 'update'
                             if sub_sls not in mods:
                                 nstate, mods, err = self.render_pstate(
                                         sub_sls,
@@ -310,9 +312,37 @@ class Pillar(object):
                                         )
                             if nstate:
                                 if key:
-                                    state[key] = nstate
-                                else:
+                                    nstate = dict((key, nstate))
+                                if overlap == 'merge':
+                                    state = merge(state, nstate)
+                                elif overlap == 'update':
                                     state.update(nstate)
+                                elif overlap == 'extend':
+                                    for name, body in nstate.items():
+                                        if name not in state:
+                                            state[name] = body
+                                        elif isinstance(body, dict) \
+                                            and isinstance(state[name], dict):
+                                            state[name] = merge(state[name], body)
+                                        elif isinstance(body, list) \
+                                            and isinstance(state[name], list):
+                                            state[name].extends(body)
+                                        else:
+                                            errors.append(
+                                                'Cannot extend ID {0} in "{1}:{2}".'
+                                                ' Type mixmatch.'.format(
+                                                    name,
+                                                    env,
+                                                    sls)
+                                                )
+                                else:
+                                    errors.append(
+                                        'Unkown collide strategy {0}'
+                                        ' in "{1}:{2}".'.format(
+                                            strategy,
+                                            env,
+                                            sls)
+                                        )
                             if err:
                                 errors += err
         return state, mods, errors

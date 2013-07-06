@@ -15,3 +15,15 @@ def update(dest, upd):
         else:
             dest[key] = upd[key]
     return dest
+
+
+def merge(*dicts):
+    """
+    Returns a new merged dict.
+
+    >>> merge({"foo": 1}, {"bar": 2}, {"foo": 3, "baz": 3})
+    {'bar': 2, 'foo': 1, 'baz': 3}
+    """
+
+    keys = itertools.chain(*[d.items() for d in reversed(dicts)])
+    return dict(keys)

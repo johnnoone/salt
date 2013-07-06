@@ -105,9 +105,19 @@ the additional pillar as if it were part of the same file:
     include:
       - users
 
-The full include form allows two additional options -- passing default values
-to the templating engine for the included pillar file as well as an optional
-key under which to nest the results of the included pillar:
+The full include form allows three additional options.
+
+defaults
+  Passes default variables to the templating engine for the included file.
+
+key
+  if it is provided, the results of the included pillar will be nested under
+  this key.
+
+overlap
+  If the top pillar and the included one provide same keys, this option defines
+  the merging strategy. By default ``update`` will replace existing keys.
+  ``merge`` will keep the top keys, and ``extend`` will recursively merge keys.
 
 .. code-block:: yaml
 
@@ -116,11 +126,13 @@ key under which to nest the results of the included pillar:
           defaults:
             - sudo: ['bob', 'paul']
           key: users
+          overlap: merge
 
-With this form, the included file (users.sls) will be nested within the 'users'
-key of the compiled pillar. Additionally, the 'sudo' value will be available
-as a template variable to users.sls.
+With this form, the included file ``users.sls`` will be rendered with the 'sudo'
+variable. Results will be nested within the 'users' key of the compiled pillar.
+Additionally, it the top file already defines a 'users', results will be merged.
 
+Note that ``extend`` strategy requires that duplicates keys must be list or dict.
 
 Viewing Minion Pillar
 =====================
