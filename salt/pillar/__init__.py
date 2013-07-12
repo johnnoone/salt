@@ -15,8 +15,9 @@ import salt.minion
 import salt.crypt
 from salt._compat import string_types, callable
 from salt.template import compile_template
+import salt.utils
 from salt.utils.dictupdate import update
-from salt.utils import memoize, merging
+from salt.utils import merging
 from salt.version import __version__
 
 log = logging.getLogger(__name__)
@@ -446,40 +447,4 @@ class Pillar(object):
                 log.critical('Pillar render error: {0}'.format(error))
             pillar['_errors'] = errors
         return pillar
-
-
-def update_strategy(*dictionnaries):
-    response = {}
-    for dictionnary in dictionnaries:
-        response.update(deepcopy(dictionnary))
-    return response, []
-
-
-def merge_strategy(*dictionnaries):
-    return merge(*dictionnaries), []
-
-
-def extend_strategy(source, *extenderers):
-    errors = []
-    response = deepcopy(source)
-    for extenderer in extenderers:
-        for name, body in extenderer.items():
-            if name not in response:
-                response[name] = body
-            elif isinstance(body, dict) \
-                and isinstance(response[name], dict):
-                response[name] = merge(response[name], body)
-            elif isinstance(body, list) \
-                and isinstance(response[name], list):
-                response[name].extends(body)
-            else:
-                errors.append(
-                    'Cannot extend ID {0} in "{1}:{2}".'
-                    ' Type mixmatch.'.format(
-                        name,
-                        env,
-                        sls)
-                    )
-
-    return response, errors
 
