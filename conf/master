@@ -323,6 +323,9 @@
 #  base:
 #    - /srv/pillar
 
+# Sets the merging strategy in case of overlapped pillars by different files:
+#pillar_overlap: update
+
 # ext_pillar:
 #   - hiera: /etc/hiera.yaml
 #   - cmd_yaml: cat /etc/salt/yaml

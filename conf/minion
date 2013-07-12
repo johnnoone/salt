@@ -268,6 +268,9 @@
 #  base:
 #    - /srv/pillar
 
+# Sets the merging strategy in case of overlapped pillars by different files:
+#pillar_overlap: update
+
 ######        Security settings       #####
 ###########################################
 # Enable "open mode", this mode still maintains encryption, but turns off

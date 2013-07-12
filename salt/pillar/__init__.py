@@ -6,15 +6,17 @@ Render the pillar data
 import os
 import collections
 import logging
+from copy import deepcopy
 
 # Import salt libs
 import salt.loader
 import salt.fileclient
 import salt.minion
 import salt.crypt
-from salt._compat import string_types
+from salt._compat import string_types, callable
 from salt.template import compile_template
-from salt.utils.dictupdate import update, merge
+from salt.utils.dictupdate import update
+from salt.utils import memoize, merging
 from salt.version import __version__
 
 log = logging.getLogger(__name__)
@@ -28,6 +30,21 @@ def get_pillar(opts, grains, id_, env=None, ext=None):
             'local': Pillar
             }.get(opts['file_client'], Pillar)(opts, grains, id_, env, ext)
 
+OVERLAP_STRATEGIES = {
+    'update': merging.update,
+    'merge': merging.merge,
+    'extend': merging.extend,
+}
+
+@salt.utils.memoize
+def get_strategy(name):
+    try:
+        str = OVERLAP_STRATEGIES[name]
+        if callable(str):
+            return str
+        return loader.call(str)
+    except KeyError:
+        raise ValueError('Strategy {} not registered'.format(name))
 
 class RemotePillar(object):
     '''
@@ -106,6 +123,9 @@ class Pillar(object):
             opts['state_top'] = os.path.join('salt://', opts['state_top'][1:])
         else:
             opts['state_top'] = os.path.join('salt://', opts['state_top'])
+        if opts['pillar_overlap'] not in OVERLAP_STRATEGIES:
+            raise ValueError('Overlap strategy {} '
+                             'does not exists'.format(opts['pillar_overlap']))
         if self.__valid_ext(ext):
             if 'ext_pillar' in opts:
                 opts['ext_pillar'].append(ext)
@@ -302,7 +322,7 @@ class Pillar(object):
                             else:
                                 sub_defaults = {}
                                 key = None
-                                overlap = 'update'
+                                overlap = self.opts['overlap']
                             if sub_sls not in mods:
                                 nstate, mods, err = self.render_pstate(
                                         sub_sls,
@@ -313,32 +333,14 @@ class Pillar(object):
                             if nstate:
                                 if key:
                                     nstate = dict((key, nstate))
-                                if overlap == 'merge':
-                                    state = merge(state, nstate)
-                                elif overlap == 'update':
-                                    state.update(nstate)
-                                elif overlap == 'extend':
-                                    for name, body in nstate.items():
-                                        if name not in state:
-                                            state[name] = body
-                                        elif isinstance(body, dict) \
-                                            and isinstance(state[name], dict):
-                                            state[name] = merge(state[name], body)
-                                        elif isinstance(body, list) \
-                                            and isinstance(state[name], list):
-                                            state[name].extends(body)
-                                        else:
-                                            errors.append(
-                                                'Cannot extend ID {0} in "{1}:{2}".'
-                                                ' Type mixmatch.'.format(
-                                                    name,
-                                                    env,
-                                                    sls)
-                                                )
-                                else:
+
+                                try:
+                                    state, errs = get_strategy(overlap)(state, nstate)
+                                    errors.extend(errs)
+                                except NotRegisteredStrategy:
                                     errors.append(
-                                        'Unkown collide strategy {0}'
-                                        ' in "{1}:{2}".'.format(
+                                        'Unkown overlap strategy {0} '
+                                        'in "{1}:{2}".'.format(
                                             strategy,
                                             env,
                                             sls)
@@ -352,6 +354,7 @@ class Pillar(object):
         Extract the sls pillar files from the matches and render them into the
         pillar
         '''
+        pstates = []
         pillar = {}
         errors = []
         for env, pstates in matches.items():
@@ -359,9 +362,10 @@ class Pillar(object):
             for sls in pstates:
                 pstate, mods, err = self.render_pstate(sls, env, mods)
                 if pstate:
-                    pillar.update(pstate)
+                    pstates.append(pstate)
                 if err:
                     errors += err
+        pillar = get_strategy(self.opts['overlap'])(*pstates)
         return pillar, errors
 
     def ext_pillar(self, pillar):
@@ -442,3 +446,40 @@ class Pillar(object):
                 log.critical('Pillar render error: {0}'.format(error))
             pillar['_errors'] = errors
         return pillar
+
+
+def update_strategy(*dictionnaries):
+    response = {}
+    for dictionnary in dictionnaries:
+        response.update(deepcopy(dictionnary))
+    return response, []
+
+
+def merge_strategy(*dictionnaries):
+    return merge(*dictionnaries), []
+
+
+def extend_strategy(source, *extenderers):
+    errors = []
+    response = deepcopy(source)
+    for extenderer in extenderers:
+        for name, body in extenderer.items():
+            if name not in response:
+                response[name] = body
+            elif isinstance(body, dict) \
+                and isinstance(response[name], dict):
+                response[name] = merge(response[name], body)
+            elif isinstance(body, list) \
+                and isinstance(response[name], list):
+                response[name].extends(body)
+            else:
+                errors.append(
+                    'Cannot extend ID {0} in "{1}:{2}".'
+                    ' Type mixmatch.'.format(
+                        name,
+                        env,
+                        sls)
+                    )
+
+    return response, errors
+
