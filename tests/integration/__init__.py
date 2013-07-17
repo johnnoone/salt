@@ -59,11 +59,14 @@ TMP_STATE_TREE = os.path.join(SYS_TMP_DIR, 'salt-temp-state-tree')
 log = logging.getLogger(__name__)
 
 
-def run_tests(TestCase, needs_daemon=True):
+def run_tests(test_cases, needs_daemon=True):
     '''
     Run integration tests for a chosen test case.
 
     Function uses optparse to set up test environment
+
+    test_cases
+      list of TestCase
     '''
     class TestcaseParser(SaltTestcaseParser):
         def setup_additional_options(self):
@@ -90,8 +93,11 @@ def run_tests(TestCase, needs_daemon=True):
 
     parser = TestcaseParser()
     parser.parse_args()
-    if parser.run_testcase(TestCase, needs_daemon=needs_daemon) is False:
-        parser.finalize(1)
+    if not isinstance(test_cases, list):
+        test_cases = [test_cases]
+    for test_case in test_cases:
+        if parser.run_testcase(test_case, needs_daemon=needs_daemon) is False:
+            parser.finalize(1)
     parser.finalize(0)
 
 
