@@ -736,7 +736,7 @@ class AESFuncs(object):
         if any(key not in clear_load for key in ('fun', 'arg', 'tgt', 'ret', 'tok', 'id')):
             return False
         # If the command will make a recursive publish don't run
-        if re.match('publish.*', clear_load['fun']):
+        if clear_load['fun'].startswith('publish.'):
             return False
         # Check the permissions for this minion
         if not self.__verify_minion(clear_load['id'], clear_load['tok']):
@@ -751,7 +751,8 @@ class AESFuncs(object):
             return False
         perms = []
         for match in self.opts['peer']:
-            if re.match(match, clear_load['id']):
+            allowed_minions = self.local.cmd(match, 'test.ping', expr_form='compound').keys()
+            if clear_load['id'] in allowed_minions:
                 # This is the list of funcs/modules!
                 if isinstance(self.opts['peer'][match], list):
                     perms.extend(self.opts['peer'][match])
@@ -862,8 +863,8 @@ class AESFuncs(object):
         ret = {}
         if not salt.utils.verify.valid_id(self.opts, load['id']):
             return ret
-        checker = salt.utils.minions.CkMinions(self.opts)
-        minions = checker.check_minions(
+
+        minions = self.ckminions.check_minions(
                 load['tgt'],
                 load.get('expr_form', 'glob')
                 )
@@ -1137,7 +1138,8 @@ class AESFuncs(object):
             return {}
         perms = set()
         for match in self.opts['peer_run']:
-            if re.match(match, clear_load['id']):
+            allowed_minions = self.local.cmd(match, 'test.ping', expr_form='compound').keys()
+            if clear_load['id'] in allowed_minions:
                 # This is the list of funcs/modules!
                 if isinstance(self.opts['peer_run'][match], list):
                     perms.update(self.opts['peer_run'][match])
