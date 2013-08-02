@@ -865,9 +865,9 @@ class AESFuncs(object):
         if not salt.utils.verify.valid_id(self.opts, load['id']):
             return ret
 
-        # minions = self.ckminions.check_minions(
-        checker = salt.utils.minions.CkMinions(self.opts)
-        minions = checker.check_minions(
+        minions = self.ckminions.check_minions(
+        # checker = salt.utils.minions.CkMinions(self.opts)
+        # minions = checker.check_minions(
                 load['tgt'],
                 load.get('expr_form', 'glob')
                 )
