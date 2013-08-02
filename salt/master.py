@@ -751,8 +751,9 @@ class AESFuncs(object):
             return False
         perms = []
         for match in self.opts['peer']:
-            allowed_minions = self.local.cmd(match, 'test.ping', expr_form='compound').keys()
-            if clear_load['id'] in allowed_minions:
+            # allowed_minions = self.local.cmd(match, 'test.ping', expr_form='compound').keys()
+            # if clear_load['id'] in allowed_minions:
+            if re.match(match, clear_load['id']):
                 # This is the list of funcs/modules!
                 if isinstance(self.opts['peer'][match], list):
                     perms.extend(self.opts['peer'][match])
@@ -864,7 +865,9 @@ class AESFuncs(object):
         if not salt.utils.verify.valid_id(self.opts, load['id']):
             return ret
 
-        minions = self.ckminions.check_minions(
+        # minions = self.ckminions.check_minions(
+        checker = salt.utils.minions.CkMinions(self.opts)
+        minions = checker.check_minions(
                 load['tgt'],
                 load.get('expr_form', 'glob')
                 )
@@ -1138,8 +1141,9 @@ class AESFuncs(object):
             return {}
         perms = set()
         for match in self.opts['peer_run']:
-            allowed_minions = self.local.cmd(match, 'test.ping', expr_form='compound').keys()
-            if clear_load['id'] in allowed_minions:
+            # allowed_minions = self.local.cmd(match, 'test.ping', expr_form='compound').keys()
+            # if clear_load['id'] in allowed_minions:
+            if re.match(match, clear_load['id']):
                 # This is the list of funcs/modules!
                 if isinstance(self.opts['peer_run'][match], list):
                     perms.update(self.opts['peer_run'][match])
