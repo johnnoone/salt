@@ -46,15 +46,6 @@ import salt.syspaths as syspaths
 from salt.exceptions import SaltInvocationError
 from salt.exceptions import EauthAuthenticationError
 
-# Try to import range from https://github.com/ytoolshed/range
-HAS_RANGE = False
-try:
-    import seco.range
-    HAS_RANGE = True
-except ImportError:
-    pass
-
-
 def condition_kwarg(arg, kwarg):
     '''
     Return a single arg structure for the publisher to safely use
@@ -131,14 +122,6 @@ class LocalClient(object):
         elif user == self.opts['user']:
             return user
         return user
-
-    def _convert_range_to_list(self, tgt):
-        range_ = seco.range.Range(self.opts['range_server'])
-        try:
-            return range_.expand(tgt)
-        except seco.range.RangeException as err:
-            print('Range server exception: {0}'.format(err))
-            return []
 
     def _get_timeout(self, timeout):
         '''
@@ -1147,9 +1130,9 @@ class LocalClient(object):
 
         # Convert a range expression to a list of nodes and change expression
         # form to list
-        if expr_form == 'range' and HAS_RANGE:
-            tgt = self._convert_range_to_list(tgt)
-            expr_form = 'list'
+        if expr_form == 'range':
+            tgt = 'R@' + tgt
+            expr_form = 'compound'
 
         # If an external job cache is specified add it to the ret list
         if self.opts.get('ext_job_cache'):

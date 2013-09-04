@@ -28,13 +28,6 @@ except ImportError:
     pass
 import yaml
 
-HAS_RANGE = False
-try:
-    import seco.range
-    HAS_RANGE = True
-except ImportError:
-    pass
-
 # Import salt libs
 from salt.exceptions import (
     AuthenticationError, CommandExecutionError, CommandNotFoundError,
@@ -49,6 +42,7 @@ import salt.utils.schedule
 from salt._compat import string_types
 from salt.utils.debug import enable_sigusr1_handler
 from salt.utils.event import tagify
+import salt.targeting
 
 log = logging.getLogger(__name__)
 
@@ -1393,10 +1387,11 @@ class Matcher(object):
     Use to return the value for matching calls from the master
     '''
     def __init__(self, opts, functions=None):
-        self.opts = opts
+        log.warning('The current object is currently deprecated')
+
         if functions is None:
-            functions = salt.loader.minion_mods(self.opts)
-        self.functions = functions
+            functions = salt.loader.minion_mods(opts)
+        self.minion = salt.targeting.LocalMinion(opts, functions)
 
     def confirm_top(self, match, data, nodegroups=None):
         '''
@@ -1427,190 +1422,127 @@ class Matcher(object):
         '''
         Returns true if the passed glob matches the id
         '''
-        if type(tgt) != str:
+        try:
+            return self.minion in salt.targeting.GlobMatcher(tgt)
+        except Exception as exc:
+            log.exception(exc)
             return False
-
-        return fnmatch.fnmatch(self.opts['id'], tgt)
 
     def pcre_match(self, tgt):
         '''
         Returns true if the passed pcre regex matches
         '''
-        return bool(re.match(tgt, self.opts['id']))
+        try:
+            return self.minion in salt.targeting.PCREMatcher(tgt)
+        except Exception as exc:
+            log.exception(exc)
+            return False
 
     def list_match(self, tgt):
         '''
         Determines if this host is on the list
         '''
-        if isinstance(tgt, string_types):
-            tgt = tgt.split(',')
-        return bool(self.opts['id'] in tgt)
+
+        try:
+            return self.minion in salt.targeting.ListEvaluator(tgt)
+        except Exception as exc:
+            log.exception(exc)
+            return False
 
     def grain_match(self, tgt, delim=':'):
         '''
         Reads in the grains glob match
         '''
-        log.debug('grains target: {0}'.format(tgt))
-        if delim not in tgt:
+        try:
+            log.debug('grains target: {0}'.format(tgt))
+            return self.minion in salt.targeting.GrainMatcher(tgt, delim)
+        except salt.targeting.DelimiterError:
             log.error('Got insufficient arguments for grains match '
                       'statement from master')
-            return False
-        return salt.utils.subdict_match(self.opts['grains'], tgt, delim=delim)
+        except Exception as exc:
+            log.exception(exc)
+        return False
 
     def grain_pcre_match(self, tgt, delim=':'):
         '''
         Matches a grain based on regex
         '''
-        log.debug('grains pcre target: {0}'.format(tgt))
-        if delim not in tgt:
+        try:
+            log.debug('grains pcre target: {0}'.format(tgt))
+            return self.minion in salt.targeting.GrainPCREMatcher(tgt, delim)
+        except salt.targeting.DelimiterError:
             log.error('Got insufficient arguments for grains pcre match '
                       'statement from master')
-            return False
-        return salt.utils.subdict_match(self.opts['grains'], tgt,
-                                        delim=delim, regex_match=True)
+        except Exception as exc:
+            log.exception(exc)
+        return False
 
-    def data_match(self, tgt):
+    def data_match(self, tgt, delim=':'):
         '''
         Match based on the local data store on the minion
         '''
-        comps = tgt.split(':')
-        if len(comps) < 2:
-            return False
-        val = self.functions['data.getval'](comps[0])
-        if val is None:
-            # The value is not defined
-            return False
-        if isinstance(val, list):
-            # We are matching a single component to a single list member
-            for member in val:
-                if fnmatch.fnmatch(str(member).lower(), comps[1].lower()):
-                    return True
-            return False
-        if isinstance(val, dict):
-            if comps[1] in val:
-                return True
-            return False
-        return bool(fnmatch.fnmatch(
-            val,
-            comps[1],
-        ))
+        try:
+            log.debug('data target: {0}'.format(tgt))
+            return self.minion in salt.targeting.LocalStoreMatcher(tgt, delim)
+        except salt.targeting.DelimiterError:
+            log.error('Got insufficient arguments for data match '
+                      'statement from master')
+        except Exception as exc:
+            log.exception(exc)
+        return False
 
     def exsel_match(self, tgt):
         '''
         Runs a function and return the exit code
         '''
-        if tgt not in self.functions:
+        try:
+            return self.minion in salt.targeting.ExselMatcher(tgt)
+        except Exception as exc:
+            log.exception(exc)
             return False
-        return(self.functions[tgt]())
 
     def pillar_match(self, tgt, delim=':'):
         '''
         Reads in the pillar glob match
         '''
-        log.debug('pillar target: {0}'.format(tgt))
-        if delim not in tgt:
+        try:
+            log.debug('pillar target: {0}'.format(tgt))
+            return self.minion in salt.targeting.PillarMatcher(tgt, delim)
+        except salt.targeting.DelimiterError:
             log.error('Got insufficient arguments for pillar match '
                       'statement from master')
-            return False
-        return salt.utils.subdict_match(self.opts['pillar'], tgt, delim=delim)
+        except Exception as exc:
+            log.exception(exc)
+        return False
 
     def ipcidr_match(self, tgt):
         '''
         Matches based on ip address or CIDR notation
         '''
-        num_parts = len(tgt.split('/'))
-        if num_parts > 2:
-            # Target is not valid CIDR
+        try:
+            return self.minion in salt.targeting.SubnetIPMatcher(tgt)
+        except Exception as exc:
+            log.exception(exc)
             return False
-        elif num_parts == 2:
-            # Target is CIDR
-            return salt.utils.network.in_subnet(
-                tgt,
-                addrs=self.opts['grains'].get('ipv4', [])
-            )
-        else:
-            # Target is an IPv4 address
-            import socket
-            try:
-                socket.inet_aton(tgt)
-            except socket.error:
-                # Not a valid IPv4 address
-                return False
-            else:
-                return tgt in self.opts['grains'].get('ipv4', [])
 
     def range_match(self, tgt):
         '''
         Matches based on range cluster
         '''
-        if HAS_RANGE:
-            range_ = seco.range.Range(self.opts['range_server'])
-            try:
-                return self.opts['grains']['fqdn'] in range_.expand(tgt)
-            except seco.range.RangeException as e:
-                log.debug('Range exception in compound match: {0}'.format(e))
-                return False
-        return
+        try:
+            return self.minion in salt.targeting.YahooRangeMatcher(tgt)
+        except Exception as exc:
+            log.exception(exc)
+            return False
 
     def compound_match(self, tgt):
         '''
         Runs the compound target check
         '''
-        if not isinstance(tgt, string_types):
-            log.debug('Compound target received that is not a string')
-            return False
-        ref = {'G': 'grain',
-               'P': 'grain_pcre',
-               'I': 'pillar',
-               'L': 'list',
-               'S': 'ipcidr',
-               'E': 'pcre'}
-        if HAS_RANGE:
-            ref['R'] = 'range'
-        results = []
-        opers = ['and', 'or', 'not', '(', ')']
-        tokens = tgt.split()
-        for match in tokens:
-            # Try to match tokens from the compound target, first by using
-            # the 'G, X, I, L, S, E' matcher types, then by hostname glob.
-            if '@' in match and match[1] == '@':
-                comps = match.split('@')
-                matcher = ref.get(comps[0])
-                if not matcher:
-                    # If an unknown matcher is called at any time, fail out
-                    return False
-                results.append(
-                    str(
-                        getattr(self, '{0}_match'.format(matcher))(
-                            '@'.join(comps[1:])
-                        )
-                    )
-                )
-            elif match in opers:
-                # We didn't match a target, so append a boolean operator or
-                # subexpression
-                if results:
-                    if match == 'not':
-                        if results[-1] == 'and':
-                            pass
-                        elif results[-1] == 'or':
-                            pass
-                        else:
-                            results.append('and')
-                    results.append(match)
-                else:
-                    # seq start with oper, fail
-                    if match not in ['(', ')']:
-                        return False
-            else:
-                # The match is not explicitly defined, evaluate it as a glob
-                results.append(str(self.glob_match(match)))
-        results = ' '.join(results)
         try:
-            return eval(results)
+            return self.minion in self.targeting.compound.parse(tgt)
         except Exception:
             log.error('Invalid compound target: {0}'.format(tgt))
-            return False
         return False
 
     def nodegroup_match(self, tgt, nodegroups):
@@ -1619,6 +1551,7 @@ class Matcher(object):
         nodegroups for remote execution, but is called when the nodegroups
         matcher is used in states
         '''
+        raise NotImplementedError("Actually broken")
         if tgt in nodegroups:
             return self.compound_match(
                 salt.utils.minions.nodegroup_comp(tgt, nodegroups)

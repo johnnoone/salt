@@ -7,14 +7,13 @@ specs.
 import logging
 
 # Import salt libs
-import salt.minion
+import salt.targeting
 
 __func_alias__ = {
     'list_': 'list'
 }
 
 log = logging.getLogger(__name__)
-
 
 def compound(tgt):
     '''
@@ -26,9 +25,10 @@ def compound(tgt):
 
         salt '*' match.compound 'L@cheese,foo and *'
     '''
-    matcher = salt.minion.Matcher(__opts__, __salt__)
     try:
-        return matcher.compound_match(tgt)
+        matcher = salt.targeting.compound.parse(tgt)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -44,9 +44,10 @@ def ipcidr(tgt):
 
         salt '*' match.ipcidr '192.168.44.0/24'
     '''
-    matcher = salt.minion.Matcher({'grains': __grains__}, __salt__)
     try:
-        return matcher.ipcidr_match(tgt)
+        matcher = salt.targeting.SubnetIPMatcher(tgt)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -67,9 +68,10 @@ def pillar(tgt, delim=':'):
     .. versionchanged:: 0.16.4
         ``delim`` argument added
     '''
-    matcher = salt.minion.Matcher({'pillar': __pillar__}, __salt__)
     try:
-        return matcher.pillar_match(tgt, delim=delim)
+        matcher = salt.targeting.PillarMatcher(tgt, delim=delim)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -85,9 +87,10 @@ def data(tgt):
 
         salt '*' match.data 'spam:eggs'
     '''
-    matcher = salt.minion.Matcher(__opts__, __salt__)
     try:
-        return matcher.data_match(tgt)
+        matcher = salt.targeting.LocalStoreMatcher(tgt)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -108,9 +111,10 @@ def grain_pcre(tgt, delim=':'):
     .. versionchanged:: 0.16.4
         ``delim`` argument added
     '''
-    matcher = salt.minion.Matcher({'grains': __grains__}, __salt__)
     try:
-        return matcher.grain_pcre_match(tgt, delim=delim)
+        matcher = salt.targeting.GrainPCREMatcher(tgt, delim=delim)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -131,9 +135,10 @@ def grain(tgt, delim=':'):
     .. versionchanged:: 0.16.4
         ``delim`` argument added
     '''
-    matcher = salt.minion.Matcher({'grains': __grains__}, __salt__)
     try:
-        return matcher.grain_match(tgt, delim=delim)
+        matcher = salt.targeting.GrainMatcher(tgt, delim=delim)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -149,9 +154,10 @@ def list_(tgt):
 
         salt '*' match.list 'server1,server2'
     '''
-    matcher = salt.minion.Matcher(__opts__, __salt__)
     try:
-        return matcher.list_match(tgt)
+        matcher = salt.targeting.ListEvaluator()(tgt)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -167,9 +173,10 @@ def pcre(tgt):
 
         salt '*' match.pcre '.*'
     '''
-    matcher = salt.minion.Matcher(__opts__, __salt__)
     try:
-        return matcher.pcre_match(tgt)
+        matcher = salt.targeting.PCREMatcher(tgt)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
@@ -185,9 +192,10 @@ def glob(tgt):
 
         salt '*' match.glob '*'
     '''
-    matcher = salt.minion.Matcher(__opts__, __salt__)
     try:
-        return matcher.glob_match(tgt)
+        matcher = salt.targeting.GlobMatcher(tgt)
+        minion = salt.targeting.LocalMinion(__opts__, __salt__)
+        return minion in matcher
     except Exception as exc:
         log.exception(exc)
         return False
