@@ -5,9 +5,9 @@ from .query import *
 
 
 class LocalMinion(object):
-    def __init__(self, opts, functions):
+    def __init__(self, opts, functions=None):
         self.opts = opts
-        self.functions = functions
+        self.functions = functions or {}
 
     @property
     def id(self):
@@ -20,8 +20,4 @@ class LocalMinion(object):
     @property
     def pillar(self):
         return opts['pillar']
-
-    @property
-    def functions(self):
-        return self.functions
 
