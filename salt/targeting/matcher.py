@@ -17,14 +17,15 @@ __all__ = [
     'ExselMatcher',
     'LocalStoreMatcher',
     'YahooRangeMatcher',
+    'DelimiterError',
 ]
 
-class DelimeterError(ValueError): pass
+class DelimiterError(ValueError): pass
 
 def validate_expr(expr, delim=None):
     delim = delim or ':'
     if delim not in expr:
-        raise DelimeterError('Expression must have {0} delimiter'.format(repr(delim)))
+        raise DelimiterError('Expression must have {0} delimiter'.format(repr(delim)))
     return expr, delim
 
 class Matcher(object):
@@ -154,7 +155,7 @@ class PillarMatcher(Matcher):
         self.expr, self.delim = validate_expr(expr, delim)
 
     def __contains__(self, minion):
-        assert hasattr(minion, 'pillars'), "Minion must define a pillars property"
+        assert hasattr(minion, 'pillar'), "Minion must define a pillars property"
         assert isinstance(minion.pillar, collections.Mapping), "Minion pillars must be a dict"
         return glob_match(minion.pillar, self.expr, self.delim)
 
@@ -170,7 +171,7 @@ class GlobMatcher(Matcher):
 
     def __contains__(self, minion):
         assert hasattr(minion, 'id'), "Minion must define an id property"
-        return glob_match(minion.id, self.expr, ':')
+        return glob_match(minion.id, self.expr)
 
     def __eq__(self, other):
         if isinstance(other, GlobMatcher):
@@ -184,7 +185,7 @@ class PCREMatcher(Matcher):
 
     def __contains__(self, minion):
         assert hasattr(minion, 'id'), "Minion must define an id property"
-        return pcre_match(minion.id, self.expr, ':')
+        return pcre_match(minion.id, self.expr)
 
     def __eq__(self, other):
         if isinstance(other, PCREMatcher):
@@ -262,7 +263,7 @@ class LocalStoreMatcher(Matcher):
         assert hasattr(minion, 'functions'), "Minion must define a functions property"
         assert isinstance(minion.functions, collections.Mapping), "Minion functions must be a dict"
         assert 'data.load' in minion.functions, "data.load must be defined"
-        return glob_match(minion.functions['data.load'](), self.expr, separator=':')
+        return glob_match(minion.functions['data.load'](), self.expr, self.delim)
 
     def __eq__(self, other):
         if isinstance(other, LocalStoreMatcher):

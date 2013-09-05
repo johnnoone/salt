@@ -1124,8 +1124,9 @@ class LocalClient(object):
                         tgt, conf_file
                     )
                 )
-            tgt = salt.utils.minions.nodegroup_comp(tgt,
-                                                    self.opts['nodegroups'])
+            from salt.targeting import compound
+            compound.register_groups(self.opts['nodegroups'])
+            tgt = compound.querify(compound.parse_group(tgt))
             expr_form = 'compound'
 
         # Convert a range expression to a list of nodes and change expression

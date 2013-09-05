@@ -31,19 +31,32 @@ def dig(data, pointer, separator=':'):
         yield k, v
 
 
-def glob_match(data, pointer, separator=':'):
+def glob_match(data, pointer, separator=None):
+    def match(value, pattern):
+        return fnmatch.fnmatch(value, pattern)
+
+    if not separator:
+        return match(data, pointer)
+
     for value, pattern in dig(data, pointer, separator):
         if pattern is None:
             return bool(value)
-        if fnmatch.fnmatch(str(value), pattern):
+        if match(str(value), pattern):
             return True
     return False
 
 
-def pcre_match(data, pointer, separator=':'):
+def pcre_match(data, pointer, separator=None):
+    def match(value, pattern):
+        """Forces exact matching
+        """
+        return re.match('^(' + pattern + ')$', value)
+
+    if not separator:
+        return match(data, pointer)
     for value, pattern in dig(data, pointer, separator):
         if pattern is None:
             return bool(value)
-        if re.match(pattern, str(value)):
+        if match(str(value), pattern):
             return True
     return False

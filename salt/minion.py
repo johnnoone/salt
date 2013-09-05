@@ -1442,9 +1442,8 @@ class Matcher(object):
         '''
         Determines if this host is on the list
         '''
-
         try:
-            return self.minion in salt.targeting.ListEvaluator(tgt)
+            return self.minion in salt.targeting.ListEvaluator()(tgt)
         except Exception as exc:
             log.exception(exc)
             return False
@@ -1519,6 +1518,7 @@ class Matcher(object):
         '''
         Matches based on ip address or CIDR notation
         '''
+        return self.minion in salt.targeting.SubnetIPMatcher(tgt)
         try:
             return self.minion in salt.targeting.SubnetIPMatcher(tgt)
         except Exception as exc:
@@ -1540,7 +1540,7 @@ class Matcher(object):
         Runs the compound target check
         '''
         try:
-            return self.minion in self.targeting.compound.parse(tgt)
+            return self.minion in salt.targeting.compound.parse(tgt)
         except Exception:
             log.error('Invalid compound target: {0}'.format(tgt))
         return False
@@ -1551,9 +1551,10 @@ class Matcher(object):
         nodegroups for remote execution, but is called when the nodegroups
         matcher is used in states
         '''
-        raise NotImplementedError("Actually broken")
-        if tgt in nodegroups:
-            return self.compound_match(
-                salt.utils.minions.nodegroup_comp(tgt, nodegroups)
-            )
+
+        try:
+            salt.targeting.compound.register_groups(nodegroups, overlap=True)
+            return self.minion in salt.targeting.compound.parse_group(tgt)
+        except Exception:
+            log.error('Invalid nodegroup target: {0}'.format(tgt))
         return False

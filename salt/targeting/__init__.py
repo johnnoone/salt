@@ -19,5 +19,5 @@ class LocalMinion(object):
 
     @property
     def pillar(self):
-        return opts['pillar']
+        return self.opts['pillar']
 
