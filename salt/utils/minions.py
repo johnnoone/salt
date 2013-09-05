@@ -20,22 +20,12 @@ def nodegroup_comp(group, nodegroups, skip=None):
     '''
     Take the nodegroup and the nodegroups and fill in nodegroup refs
     '''
-    if skip is None:
-        skip = set([group])
-    if group not in nodegroups:
-        return ''
-    gstr = nodegroups[group]
-    ret = ''
-    for comp in gstr.split():
-        if not comp.startswith('N@'):
-            ret += '{0} '.format(comp)
-            continue
-        ngroup = comp[2:]
-        if ngroup in skip:
-            continue
-        skip.add(ngroup)
-        ret += nodegroup_comp(ngroup, nodegroups, skip)
-    return ret
+    log.warning('The current function is deprecated')
+
+    from salt.targeting import compound
+    compound.register_groups(nodegroups, overlap=True)
+    matcher = compound.parse_group(group)
+    return compound.querify(matcher)
 
 
 class CkMinions(object):

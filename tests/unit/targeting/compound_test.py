@@ -79,11 +79,10 @@ class TestCompound(TestCase):
         matcher = compound.parse('not (G@bar:baz and not toto) or not not I@foo:bar:baz')
         assert MinionMock(id="foo", grains={'bar':'foo'}) in matcher
 
-    def test_macros(self):
-        prev_macros = compound.macros
-        compound.macros = {
+    def test_groups(self):
+        compound.register_groups({
             'foo': 'bar'
-        }
+        }, reset=True)
         matcher = compound.parse('G@bar:baz or not N@foo')
         assert MinionMock(id="foo", grains={'bar':'foo'}) in matcher
         assert isinstance(matcher, AnyMatcher)
