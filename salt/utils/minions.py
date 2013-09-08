@@ -12,7 +12,7 @@ import logging
 # Import salt libs
 import salt.payload
 import salt.utils
-
+from utils.matching import glob_match, pcre_match, pcre_compile
 log = logging.getLogger(__name__)
 
 
@@ -69,8 +69,8 @@ class CkMinions(object):
         '''
         cwd = os.getcwd()
         os.chdir(os.path.join(self.opts['pki_dir'], 'minions'))
-        reg = re.compile(expr)
-        ret = [fn_ for fn_ in os.listdir('.') if reg.match(fn_)]
+        matcher = pcre_compile(expr)
+        ret = [fn_ for fn_ in os.listdir('.') if matcher.match(fn_)]
         os.chdir(cwd)
         return ret
 

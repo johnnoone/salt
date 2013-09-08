@@ -44,7 +44,7 @@ class MatchTest(integration.ShellCase, integration.ShellCaseCommonTestsMixIn):
         data = '\n'.join(data)
         self.assertNotIn('minion', data)
         self.assertNotIn('sub_minion', data)
-        match = 'P@test_grain:^cheese$ and * and G@test_grain:cheese'
+        match = 'P@test_grain:cheese and * and G@test_grain:cheese'
         data = self.run_salt('-t 1 -C \'{0}\' test.ping'.format(match))
         data = '\n'.join(data)
         self.assertIn('minion', data)
@@ -72,7 +72,7 @@ class MatchTest(integration.ShellCase, integration.ShellCaseCommonTestsMixIn):
         '''
         test salt regex matcher
         '''
-        data = self.run_salt('-E "^minion$" test.ping')
+        data = self.run_salt('-E "minion" test.ping')
         data = '\n'.join(data)
         self.assertIn('minion', data)
         self.assertNotIn('sub_minion', data)
@@ -133,12 +133,12 @@ class MatchTest(integration.ShellCase, integration.ShellCaseCommonTestsMixIn):
         test salt grain matcher
         '''
         data = self.run_salt(
-            '-t 1 --grain-pcre "test_grain:^cheese$" test.ping'
+            '-t 1 --grain-pcre "test_grain:cheese" test.ping'
         )
         data = '\n'.join(data)
         self.assertIn('minion', data)
         self.assertNotIn('sub_minion', data)
-        data = self.run_salt('--grain-pcre "test_grain:.*am$" test.ping')
+        data = self.run_salt('--grain-pcre "test_grain:.*am" test.ping')
         data = '\n'.join(data)
         self.assertIn('sub_minion', data)
         self.assertNotIn('minion', data.replace('sub_minion', 'stub'))

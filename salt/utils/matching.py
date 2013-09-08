@@ -2,6 +2,12 @@ import collections
 import fnmatch
 import re
 
+__all__ = [
+    'glob_match',
+    'pcre_match',
+    'pcre_compile',
+]
+
 def dig(data, pointer, separator=':'):
     """Returns all relevant value -> pattern from data.
     """
@@ -32,31 +38,35 @@ def dig(data, pointer, separator=':'):
 
 
 def glob_match(data, pointer, separator=None):
-    def match(value, pattern):
-        return fnmatch.fnmatch(value, pattern)
+    def match(value, expr):
+        return fnmatch.fnmatch(value, expr)
 
     if not separator:
         return match(data, pointer)
 
-    for value, pattern in dig(data, pointer, separator):
+    for value, expr in dig(data, pointer, separator):
         if pattern is None:
             return bool(value)
-        if match(str(value), pattern):
+        if match(str(value), expr):
             return True
     return False
 
 
 def pcre_match(data, pointer, separator=None):
-    def match(value, pattern):
-        """Forces exact matching
-        """
-        return re.match('^(' + pattern + ')$', value)
+    def match(value, expr):
+        return prce_compile(expr, value)
 
     if not separator:
         return match(data, pointer)
-    for value, pattern in dig(data, pointer, separator):
-        if pattern is None:
+    for value, expr in dig(data, pointer, separator):
+        if expr is None:
             return bool(value)
-        if match(str(value), pattern):
+        if match(str(value), expr):
             return True
     return False
+
+
+def pcre_compile(expr):
+    """Forces exact matching
+    """
+    return re.compile('^(' + expr + ')$')
