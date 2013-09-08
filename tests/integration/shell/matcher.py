@@ -42,7 +42,7 @@ class MatchTest(integration.ShellCase, integration.ShellCaseCommonTestsMixIn):
         self.assertNotIn('sub_minion', data)
         data = self.run_salt('-C "min* not G@test_grain:foo" test.ping')
         data = '\n'.join(data)
-        self.assertIn('minion', data)
+        self.assertNotIn('minion', data)
         self.assertNotIn('sub_minion', data)
         match = 'P@test_grain:^cheese$ and * and G@test_grain:cheese'
         data = self.run_salt('-t 1 -C \'{0}\' test.ping'.format(match))
