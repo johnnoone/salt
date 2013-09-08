@@ -12,7 +12,7 @@ import logging
 # Import salt libs
 import salt.payload
 import salt.utils
-from utils.matching import glob_match, pcre_match, pcre_compile
+from salt.utils.matching import glob_match, pcre_match, pcre_compile
 log = logging.getLogger(__name__)
 
 
