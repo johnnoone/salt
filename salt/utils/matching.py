@@ -48,7 +48,7 @@ def glob_match(data, pointer, separator=None):
         return match(data, pointer)
 
     for value, expr in dig(data, pointer, separator):
-        if pattern is None:
+        if expr is None:
             return bool(value)
         if match(str(value), expr):
             return True
@@ -57,7 +57,7 @@ def glob_match(data, pointer, separator=None):
 
 def pcre_match(data, pointer, separator=None):
     def match(value, expr):
-        return pcre_compile(expr, value).match(value)
+        return pcre_compile(expr).match(value)
 
     if not separator:
         return match(data, pointer)

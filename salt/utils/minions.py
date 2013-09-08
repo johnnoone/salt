@@ -40,17 +40,15 @@ class CkMinions(object):
         '''
         Return the minions found by looking via globs
         '''
-        cwd = os.getcwd()
-        os.chdir(os.path.join(self.opts['pki_dir'], 'minions'))
-        ret = set(glob.glob(expr))
         try:
-            os.chdir(cwd)
+            data = os.listdir(os.path.join(self.opts['pki_dir'], 'minions'))
+            data = glob_filter(data, expr)
         except OSError as exc:
             if exc.errno != 13:
                 # If it's not a permission denied, perhaps we're running with
                 # sudo
                 raise
-        return list(ret)
+        return data
 
     def _check_list_minions(self, expr):
         '''
