@@ -5,8 +5,11 @@ import re
 __all__ = [
     'glob_match',
     'pcre_match',
+    'glob_filter',
+    'pcre_filter',
     'pcre_compile',
 ]
+
 
 def dig(data, pointer, separator=':'):
     """Returns all relevant value -> pattern from data.
@@ -54,7 +57,7 @@ def glob_match(data, pointer, separator=None):
 
 def pcre_match(data, pointer, separator=None):
     def match(value, expr):
-        return prce_compile(expr, value)
+        return pcre_compile(expr, value).match(value)
 
     if not separator:
         return match(data, pointer)
@@ -66,7 +69,22 @@ def pcre_match(data, pointer, separator=None):
     return False
 
 
+def glob_filter(values, expr):
+    """
+    Filters a list of values by glob.
+    """
+    return fnmatch.filter(values, expr)
+
+
+def pcre_filter(values, expr):
+    """
+    Filters a list of values by pcre.
+    """
+    compiled = re.compile('^(' + expr + ')$')
+    return set([value for value in value if compiled.match(value)])
+
+
 def pcre_compile(expr):
     """Forces exact matching
     """
-    return re.compile('^(' + expr + ')$')
+    return re.compile('^({0})$'.format(expr))
