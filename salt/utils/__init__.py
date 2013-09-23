@@ -7,7 +7,6 @@ from __future__ import absolute_import
 # Import python libs
 import datetime
 import distutils.version  # pylint: disable=E0611
-import fnmatch
 import hashlib
 import imp
 import inspect
@@ -68,6 +67,7 @@ import salt.minion
 import salt.payload
 import salt.version
 from salt.utils.decorators import memoize as real_memoize
+from salt.utils import matching
 from salt.exceptions import (
     SaltClientError, CommandNotFoundError, SaltSystemExit
 )
@@ -859,15 +859,7 @@ def subdict_match(data, expr, delim=':', regex_match=False):
     data['foo']['bar'] == 'baz'. The former would take priority over the
     latter.
     '''
-    def _match(target, pattern, regex_match=False):
-        if regex_match:
-            try:
-                return re.match(pattern.lower(), str(target).lower())
-            except Exception:
-                log.error('Invalid regex {0!r} in match'.format(pattern))
-                return False
-        else:
-            return fnmatch.fnmatch(str(target).lower(), pattern.lower())
+    _match = matching.pcre_match if regex_match else matching.glob_match
 
     for idx in range(1, expr.count(delim) + 1):
         splits = expr.split(delim)
@@ -886,10 +878,10 @@ def subdict_match(data, expr, delim=':', regex_match=False):
         if isinstance(match, list):
             # We are matching a single component to a single list member
             for member in match:
-                if _match(member, matchstr, regex_match=regex_match):
+                if _match(member, matchstr):
                     return True
             continue
-        if _match(match, matchstr, regex_match=regex_match):
+        if _match(match, matchstr):
             return True
     return False
 

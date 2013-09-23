@@ -13,6 +13,7 @@ import logging
 # Import salt libs
 import salt.payload
 import salt.utils
+from salt.utils import matching
 
 log = logging.getLogger(__name__)
 
@@ -80,8 +81,7 @@ class CkMinions(object):
         '''
         cwd = os.getcwd()
         os.chdir(os.path.join(self.opts['pki_dir'], 'minions'))
-        reg = re.compile(expr)
-        ret = [fn_ for fn_ in os.listdir('.') if reg.match(fn_)]
+        ret = matching.pcre_filter(expr, os.listdir('.'))
         os.chdir(cwd)
         return ret
 

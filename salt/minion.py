@@ -7,11 +7,9 @@ Routines to set up a minion
 import logging
 import getpass
 import multiprocessing
-import fnmatch
 import copy
 import os
 import hashlib
-import re
 import types
 import threading
 import time
@@ -44,6 +42,7 @@ import salt.client
 import salt.crypt
 import salt.loader
 import salt.utils
+from salt.utils import matching
 import salt.payload
 import salt.utils.schedule
 from salt._compat import string_types
@@ -1431,13 +1430,13 @@ class Matcher(object):
         if type(tgt) != str:
             return False
 
-        return fnmatch.fnmatch(self.opts['id'], tgt)
+        return matching.glob_match(tgt, self.opts['id'])
 
     def pcre_match(self, tgt):
         '''
         Returns true if the passed pcre regex matches
         '''
-        return bool(re.match(tgt, self.opts['id']))
+        return matching.pcre_match(tgt, self.opts['id'])
 
     def list_match(self, tgt):
         '''
@@ -1475,26 +1474,19 @@ class Matcher(object):
         Match based on the local data store on the minion
         '''
         comps = tgt.split(':')
-        if len(comps) < 2:
+        name, sep, expr = tgt.partition(':')
+        if not sep:
             return False
-        val = self.functions['data.getval'](comps[0])
+        val = self.functions['data.getval'](name)
         if val is None:
             # The value is not defined
             return False
         if isinstance(val, list):
             # We are matching a single component to a single list member
-            for member in val:
-                if fnmatch.fnmatch(str(member).lower(), comps[1].lower()):
-                    return True
-            return False
+            return any(matching.glob_match(expr, member) for member in val)
         if isinstance(val, dict):
-            if comps[1] in val:
-                return True
-            return False
-        return bool(fnmatch.fnmatch(
-            val,
-            comps[1],
-        ))
+            return expr in val
+        return matching.glob_match(expr, val)
 
     def exsel_match(self, tgt):
         '''
