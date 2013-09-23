@@ -861,8 +861,8 @@ def subdict_match(data, expr, delim=':', regex_match=False):
     '''
     _match = matching.pcre_match if regex_match else matching.glob_match
 
-    for idx in range(1, expr.count(delim) + 1):
-        splits = expr.split(delim)
+    splits = expr.split(delim)
+    for idx in range(1, len(splits)):
         key = delim.join(splits[:idx])
         matchstr = delim.join(splits[idx:])
         log.debug('Attempting to match {0!r} in {1!r} using delimiter '

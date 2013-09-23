@@ -1637,19 +1637,10 @@ class ClearFuncs(object):
 
                 if line == keyid:
                     return True
-                if fnmatch.fnmatch(keyid, line):
+                if matching.glob_matching(line, keyid):
                     return True
-                try:
-                    if matching.pcre_matching(line, keyid):
-                        return True
-                except re.error:
-                    log.warn(
-                        '{0} is not a valid regular expression, ignoring line '
-                        'in {1}'.format(
-                            line, autosign_file
-                        )
-                    )
-                    continue
+                if matching.pcre_matching(line, keyid):
+                    return True
 
         return False
 

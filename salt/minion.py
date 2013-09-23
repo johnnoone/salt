@@ -1444,7 +1444,7 @@ class Matcher(object):
         '''
         if isinstance(tgt, string_types):
             tgt = tgt.split(',')
-        return bool(self.opts['id'] in tgt)
+        return self.opts['id'] in tgt
 
     def grain_match(self, tgt, delim=':'):
         '''
