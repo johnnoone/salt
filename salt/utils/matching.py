@@ -53,6 +53,7 @@ def pcre_match(pattern, subject):
     >>> pcre_match('f.o.*', 'foobar')
     True
     '''
+
     return True if compile_pcre(pattern).match(subject) else False
 
 
