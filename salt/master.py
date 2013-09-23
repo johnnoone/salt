@@ -51,6 +51,7 @@ import salt.utils.verify
 import salt.utils.minions
 import salt.utils.gzip_util
 from salt.utils.debug import enable_sigusr1_handler
+from salt.utils import matching
 from salt.exceptions import SaltMasterError, MasterExit
 from salt.utils.event import tagify
 
@@ -778,7 +779,7 @@ class AESFuncs(object):
         if any(key not in clear_load for key in ('fun', 'arg', 'tgt', 'ret', 'tok', 'id')):
             return False
         # If the command will make a recursive publish don't run
-        if re.match('publish.*', clear_load['fun']):
+        if matching.pcre_matching('publish.*', clear_load['fun']):
             return False
         # Check the permissions for this minion
         if not self.__verify_minion(clear_load['id'], clear_load['tok']):
@@ -793,7 +794,7 @@ class AESFuncs(object):
             return False
         perms = []
         for match in self.opts['peer']:
-            if re.match(match, clear_load['id']):
+            if matching.pcre_matching(match, clear_load['id']):
                 # This is the list of funcs/modules!
                 if isinstance(self.opts['peer'][match], list):
                     perms.extend(self.opts['peer'][match])
@@ -1242,13 +1243,13 @@ class AESFuncs(object):
             return {}
         perms = set()
         for match in self.opts['peer_run']:
-            if re.match(match, clear_load['id']):
+            if matching.pcre_matching(match, clear_load['id']):
                 # This is the list of funcs/modules!
                 if isinstance(self.opts['peer_run'][match], list):
                     perms.update(self.opts['peer_run'][match])
         good = False
         for perm in perms:
-            if re.match(perm, clear_load['fun']):
+            if matching.pcre_matching(perm, clear_load['fun']):
                 good = True
         if not good:
             return {}
@@ -1639,7 +1640,7 @@ class ClearFuncs(object):
                 if fnmatch.fnmatch(keyid, line):
                     return True
                 try:
-                    if re.match(r'\A{0}\Z'.format(line), keyid):
+                    if matching.pcre_matching(line, keyid):
                         return True
                 except re.error:
                     log.warn(
@@ -2128,7 +2129,7 @@ class ClearFuncs(object):
         good = True
         # Check if the user is blacklisted
         for user_re in self.opts['client_acl_blacklist'].get('users', []):
-            if re.match(user_re, clear_load['user']):
+            if matching.pcre_matching(user_re, clear_load['user']):
                 good = False
                 break
 
@@ -2141,7 +2142,7 @@ class ClearFuncs(object):
             else:
                 funs_to_check = clear_load['fun']
             for fun in funs_to_check:
-                if re.match(module_re, fun):
+                if matching.pcre_matching(module_re, fun):
                     good = False
                     break
 
