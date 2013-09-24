@@ -779,7 +779,7 @@ class AESFuncs(object):
         if any(key not in clear_load for key in ('fun', 'arg', 'tgt', 'ret', 'tok', 'id')):
             return False
         # If the command will make a recursive publish don't run
-        if matching.pcre_matching('publish.*', clear_load['fun']):
+        if re.match('publish.*', clear_load['fun']):
             return False
         # Check the permissions for this minion
         if not self.__verify_minion(clear_load['id'], clear_load['tok']):
@@ -1249,7 +1249,7 @@ class AESFuncs(object):
                     perms.update(self.opts['peer_run'][match])
         good = False
         for perm in perms:
-            if matching.pcre_matching(perm, clear_load['fun']):
+            if re.match(perm, clear_load['fun']):
                 good = True
         if not good:
             return {}
@@ -1641,6 +1641,18 @@ class ClearFuncs(object):
                     return True
                 if matching.pcre_matching(line, keyid):
                     return True
+
+                try:
+                    if re.match(r'\A{0}\Z'.format(line), keyid):
+                        return True
+                except re.error:
+                    log.warn(
+                        '{0} is not a valid regular expression, ignoring line '
+                        'in {1}'.format(
+                            line, autosign_file
+                        )
+                    )
+                    continue
 
         return False
 
@@ -2120,7 +2132,7 @@ class ClearFuncs(object):
         good = True
         # Check if the user is blacklisted
         for user_re in self.opts['client_acl_blacklist'].get('users', []):
-            if matching.pcre_matching(user_re, clear_load['user']):
+            if re.match(user_re, clear_load['user']):
                 good = False
                 break
 
@@ -2133,7 +2145,7 @@ class ClearFuncs(object):
             else:
                 funs_to_check = clear_load['fun']
             for fun in funs_to_check:
-                if matching.pcre_matching(module_re, fun):
+                if re.match(module_re, fun):
                     good = False
                     break
 
