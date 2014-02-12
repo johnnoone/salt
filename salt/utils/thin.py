@@ -10,6 +10,7 @@ import tarfile
 # Import third party libs
 import jinja2
 import yaml
+
 try:
     import markupsafe
     HAS_MARKUPSAFE = True
@@ -20,6 +21,7 @@ except ImportError:
 # Import salt libs
 import salt
 import salt.utils
+
 
 SALTCALL = '''
 from salt.scripts import salt_call

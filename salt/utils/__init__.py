@@ -30,7 +30,6 @@ import tempfile
 import time
 import types
 import warnings
-import yaml
 from calendar import month_abbr as months
 
 try:
@@ -73,6 +72,7 @@ import salt.payload
 import salt.version
 from salt._compat import string_types
 from salt.utils.decorators import memoize as real_memoize
+from salt.utils.serializers import silas, DeserializationError
 from salt.exceptions import (
     SaltClientError, CommandNotFoundError, SaltSystemExit, SaltInvocationError
 )
@@ -1971,8 +1971,8 @@ def repack_dictlist(data):
     '''
     if isinstance(data, string_types):
         try:
-            data = yaml.safe_load(data)
-        except yaml.parser.ParserError as err:
+            data = silas.deserialize(data)
+        except DeserializationError as err:
             log.error(err)
             return {}
     if not isinstance(data, list) \

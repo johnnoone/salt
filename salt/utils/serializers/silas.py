@@ -176,4 +176,15 @@ class SLSDumper(Dumper):  # pylint: disable=W0232
         return self.represent_mapping('tag:yaml.org,2002:map', data.items())
 
 # make every dict like obj to be represented as a map
+# like OrderedDict,  defaultdict...
 SLSDumper.add_multi_representer(dict, SLSDumper.represent_odict)
+
+# TODO: see how to backport the previous yamlloader
+# import warnings
+#
+# class DuplicateKeyWarning(RuntimeWarning):
+#     '''
+#     Warned when duplicate keys exist
+#     '''
+#
+# warnings.simplefilter('always', category=DuplicateKeyWarning)

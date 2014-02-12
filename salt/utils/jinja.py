@@ -15,12 +15,12 @@ from jinja2 import BaseLoader, Markup, TemplateNotFound, nodes
 from jinja2.environment import TemplateModule
 from jinja2.ext import Extension
 from jinja2.exceptions import TemplateRuntimeError
-import yaml
 
 # Import salt libs
 import salt
 import salt.fileclient
 from salt.utils.odict import OrderedDict
+from salt.utils.serializers import silas, DeserializationError
 from salt._compat import string_types
 
 log = logging.getLogger(__name__)
@@ -29,17 +29,6 @@ __all__ = [
     'SaltCacheLoader',
     'SerializerExtension'
 ]
-
-
-# To dump OrderedDict objects as regular dicts. Used by the yaml
-# template filter.
-class OrderedDictDumper(yaml.Dumper):  # pylint: disable=W0232
-    pass
-
-
-yaml.add_representer(OrderedDict,
-                     yaml.representer.SafeRepresenter.represent_dict,
-                     Dumper=OrderedDictDumper)
 
 
 class SaltCacheLoader(BaseLoader):
@@ -304,8 +293,8 @@ class SerializerExtension(Extension, object):
         return Markup(json.dumps(value, sort_keys=True).strip())
 
     def format_yaml(self, value):
-        return Markup(yaml.dump(value, default_flow_style=True,
-                                Dumper=OrderedDictDumper).strip())
+        return Markup(silas.serialize(value, default_flow_style=True,
+                                      Dumper=OrderedDictDumper).strip())
 
     def format_python(self, value):
         return Markup(pprint.pformat(value).strip())
@@ -314,7 +303,7 @@ class SerializerExtension(Extension, object):
         if isinstance(value, TemplateModule):
             value = str(value)
         try:
-            return yaml.safe_load(value)
+            return silas.deserialize(value)
         except AttributeError:
             raise TemplateRuntimeError(
                     'Unable to load yaml from {0}'.format(value))

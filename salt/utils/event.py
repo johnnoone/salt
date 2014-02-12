@@ -66,7 +66,7 @@ try:
 except ImportError:
     # Local mode does not need zmq
     pass
-import yaml
+from salt.utils.serializers import silas
 
 # Import salt libs
 import salt.payload
@@ -517,7 +517,7 @@ class Reactor(multiprocessing.Process, salt.state.Compiler):
         if isinstance(self.opts['reactor'], basestring):
             try:
                 with salt.utils.fopen(self.opts['reactor']) as fp_:
-                    react_map = yaml.safe_load(fp_.read())
+                    react_map = silas.deserialize(fp_)
             except (OSError, IOError):
                 log.error(
                     'Failed to read reactor map: "{0}"'.format(
