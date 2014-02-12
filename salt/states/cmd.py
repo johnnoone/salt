@@ -162,10 +162,10 @@ import copy
 import json
 import shlex
 import logging
-import yaml
 
 # Import salt libs
 import salt.utils
+from salt.utils.serializers import silas
 from salt.exceptions import CommandExecutionError, SaltRenderError
 from salt._compat import string_types
 
@@ -526,7 +526,7 @@ def run(name,
     if env:
         if isinstance(env, basestring):
             try:
-                env = yaml.safe_load(env)
+                env = silas.deserialize(env)
             except Exception:
                 _env = {}
                 for var in env.split():
@@ -546,7 +546,7 @@ def run(name,
             for comp in env:
                 try:
                     if isinstance(comp, basestring):
-                        _env.update(yaml.safe_load(comp))
+                        _env.update(silas.deserialize(comp))
                     if isinstance(comp, dict):
                         _env.update(comp)
                     else:

@@ -225,12 +225,10 @@ import json
 import pprint
 import traceback
 
-# Import third party libs
-import yaml
-
 # Import salt libs
 import salt.utils
 import salt.utils.templates
+from salt.utils.serializers import silas
 from salt.exceptions import CommandExecutionError
 from salt.utils.yamldumper import OrderedDumper
 from salt._compat import string_types, integer_types
@@ -3027,7 +3025,7 @@ def serialize(name,
 
     formatter = kwargs.pop('formatter', 'yaml').lower()
     if formatter == 'yaml':
-        contents = yaml.dump(dataset, default_flow_style=False, Dumper=OrderedDumper)
+        contents = silas.serialize(dataset, default_flow_style=False)
     elif formatter == 'json':
         contents = json.dumps(dataset,
                               indent=2,
