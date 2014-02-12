@@ -11,9 +11,6 @@ import os
 import shutil
 import subprocess
 
-# Import third party libs
-import yaml
-
 # Import salt libs
 from salt.exceptions import MinionError, SaltReqTimeoutError
 import salt.client
@@ -22,6 +19,7 @@ import salt.loader
 import salt.payload
 import salt.transport
 import salt.utils
+from salt.utils.serializers import silas
 import salt.utils.templates
 import salt.utils.gzip_util
 from salt._compat import (
@@ -829,7 +827,7 @@ class LocalClient(Client):
                        '').format(self.opts['external_nodes']))
             return {}
         cmd = '{0} {1}'.format(self.opts['external_nodes'], self.opts['id'])
-        ndata = yaml.safe_load(subprocess.Popen(
+        ndata = silas.deserialize(subprocess.Popen(
                                cmd,
                                shell=True,
                                stdout=subprocess.PIPE
