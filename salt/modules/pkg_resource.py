@@ -11,11 +11,9 @@ import pprint
 import re
 import sys
 
-# Import third party libs
-import yaml
-
 # Import salt libs
 import salt.utils
+from salt.utils.serializers import silas, DeserializationError
 
 log = logging.getLogger(__name__)
 __SUFFIX_NOT_NEEDED = ('x86_64', 'noarch')
@@ -168,8 +166,8 @@ def pack_sources(sources):
     '''
     if isinstance(sources, basestring):
         try:
-            sources = yaml.safe_load(sources)
-        except yaml.parser.ParserError as err:
+            sources = silas.deserialize(sources)
+        except DeserializationError as err:
             log.error(err)
             return {}
     ret = {}

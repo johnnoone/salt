@@ -12,10 +12,11 @@ import urllib2
 import json
 
 # Import third party libs
-import yaml
+from salt.utils.serializers import silas
 
 # Import salt libs
 import salt.utils
+from salt.utils.serializers import silas, DeserializationError
 from salt._compat import string_types
 from salt.exceptions import (
     CommandExecutionError, MinionError, SaltInvocationError
@@ -1485,8 +1486,8 @@ def set_selections(path=None, selection=None, clear=False, saltenv='base'):
 
     if isinstance(selection, string_types):
         try:
-            selection = yaml.safe_load(selection)
-        except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
+            selection = silas.deserialize(selection)
+        except DeserializationError as exc:
             raise SaltInvocationError(
                 'Improperly-formatted selection: {0}'.format(exc)
             )

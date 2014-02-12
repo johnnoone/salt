@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import inspect
-import json
 import os
-import yaml
 
 import salt.fileclient
 import salt.utils
+from salt.utils.serializers import json, silas
 
 __virtualname__ = 'defaults'
 
@@ -41,11 +40,11 @@ def _load(pillar_name, defaults_path):
     the defaults.json from the cache location. If it does not exist, try
     defaults.yaml.
     '''
-    for loader in json, yaml:
-        defaults_file = os.path.join(defaults_path, 'defaults.' + loader.__name__)
+
+    for ext, serializer in (('json', json), ('yaml', silas)):
+        defaults_file = os.path.join(defaults_path, 'defaults.' + ext)
         if os.path.exists(defaults_file):
-            defaults = loader.load(open(defaults_file))
-            return defaults
+            defaults = serializer.deserialize(open(defaults_file))
 
 
 def get(key, default=''):

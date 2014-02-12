@@ -15,11 +15,11 @@ import shutil
 import subprocess
 import sys
 import traceback
-import yaml
 
 # Import salt libs
 import salt.utils
 import salt.utils.timed_subprocess
+from salt.utils.serializers import silas, DeserializationError
 import salt.grains.extra
 from salt._compat import string_types
 from salt.exceptions import CommandExecutionError, TimedProcTimeoutError
@@ -285,8 +285,8 @@ def _run(cmd,
         env = {}
     elif isinstance(env, basestring):
         try:
-            env = yaml.safe_load(env)
-        except yaml.parser.ParserError as err:
+            env = silas.deserialize(env)
+        except DeserializationError as err:
             log.error(err)
             env = {}
     if not isinstance(env, dict):

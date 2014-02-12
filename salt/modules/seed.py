@@ -7,13 +7,13 @@ Virtual machine image management tools
 import os
 import glob
 import shutil
-import yaml
 import logging
 import tempfile
 
 # Import salt libs
 import salt.crypt
 import salt.utils
+from salt.utils.serializers import silas
 import salt.config
 
 
@@ -103,7 +103,7 @@ def apply_(path, id_=None, config=None, approve_key=True, install=True):
     # Write the new minion's config to a tmp file
     tmp_config = os.path.join(tmp, 'minion')
     with salt.utils.fopen(tmp_config, 'w+') as fp_:
-        fp_.write(yaml.dump(config, default_flow_style=False))
+        fp_.write(yaml.serialize(config, default_flow_style=False))
 
     # Generate keys for the minion
     salt.crypt.gen_keys(tmp, 'minion', 2048)

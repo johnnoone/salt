@@ -17,7 +17,6 @@ import string  # pylint: disable=deprecated-module
 import logging
 
 # Import third party libs
-import yaml
 import jinja2
 import jinja2.exceptions
 try:
@@ -31,6 +30,7 @@ except ImportError:
 import salt.utils
 import salt.utils.templates
 import salt.utils.validate.net
+from salt.utils.serializers import silas, DeserializationError
 from salt._compat import StringIO as _StringIO
 from salt.exceptions import CommandExecutionError, SaltInvocationError
 
@@ -943,9 +943,9 @@ def get_disks(vm_):
                     continue
                 output.append(line)
             output = '\n'.join(output)
-            disks[dev].update(yaml.safe_load(output))
+            disks[dev].update(silas.deserialize(output))
         except TypeError:
-            disks[dev].update(yaml.safe_load('image: Does not exist'))
+            disks[dev].update(silas.deserialize('image: Does not exist'))
     return disks
 
 
@@ -1408,7 +1408,7 @@ def seed_non_shared_migrate(disks, force=False):
         size = data['virtual size'].split()[1][1:]
         if os.path.isfile(fn_) and not force:
             # the target exists, check to see if it is compatible
-            pre = yaml.safe_load(subprocess.Popen('qemu-img info arch',
+            pre = silas.deserialize(subprocess.Popen('qemu-img info arch',
                 shell=True,
                 stdout=subprocess.PIPE).communicate()[0])
             if pre['file format'] != data['file format']\

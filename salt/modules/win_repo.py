@@ -14,7 +14,6 @@ Place all Windows package files in the 'win_repo' directory.
 import os
 
 # Import third party libs
-import yaml
 try:
     import msgpack
 except ImportError:
@@ -25,6 +24,7 @@ import salt.output
 import salt.utils
 import logging
 from salt._compat import string_types
+from salt.utils.serializers import silas, DeserializationError
 
 log = logging.getLogger(__name__)
 
@@ -61,8 +61,8 @@ def genrepo():
             if name.endswith('.sls'):
                 with salt.utils.fopen(os.path.join(root, name), 'r') as slsfile:
                     try:
-                        config = yaml.safe_load(slsfile.read()) or {}
-                    except yaml.parser.ParserError as exc:
+                        config = silas.deserialize(slsfile) or {}
+                    except DeserializationError as exc:
                         # log.debug doesn't seem to be working
                         # delete the following print statement
                         # when log.debug works

@@ -10,12 +10,12 @@ import math
 import operator
 import os
 import random
-import yaml
 import logging
 
 # Import salt libs
 import salt.utils
 import salt.utils.dictupdate
+from salt.utils.serializers import silas
 from salt.exceptions import SaltException
 
 __proxyenabled__ = ['*']
@@ -195,7 +195,7 @@ def setval(key, val, destructive=False):
     if os.path.isfile(gfn):
         with salt.utils.fopen(gfn, 'rb') as fp_:
             try:
-                grains = yaml.safe_load(fp_.read())
+                grains = silas.deserialize(fp_)
             except Exception as e:
                 return 'Unable to read existing grains file: {0}'.format(e)
         if not isinstance(grains, dict):
@@ -205,10 +205,7 @@ def setval(key, val, destructive=False):
             del grains[key]
     else:
         grains[key] = val
-    # Cast defaultdict to dict; is there a more central place to put this?
-    yaml.representer.SafeRepresenter.add_representer(collections.defaultdict,
-            yaml.representer.SafeRepresenter.represent_dict)
-    cstr = yaml.safe_dump(grains, default_flow_style=False)
+    cstr = silas.serialize(grains, default_flow_style=False)
     try:
         with salt.utils.fopen(gfn, 'w+') as fp_:
             fp_.write(cstr)

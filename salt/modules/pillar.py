@@ -3,12 +3,10 @@
 Extract the pillar data for this minion
 '''
 
-# Import third party libs
-import yaml
-
 # Import salt libs
 import salt.pillar
 import salt.utils
+from salt.utils.serializers import silas
 
 __proxyenabled__ = ['*']
 
@@ -129,7 +127,7 @@ def ext(external):
         salt '*' pillar.ext '{libvirt: _}'
     '''
     if isinstance(external, basestring):
-        external = yaml.safe_load(external)
+        external = silas.deserialize(external)
     pillar = salt.pillar.get_pillar(
         __opts__,
         __grains__,
