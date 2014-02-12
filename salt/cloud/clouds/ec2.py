@@ -71,7 +71,6 @@ import time
 import uuid
 import pprint
 import logging
-import yaml
 
 # Import libs for talking to the EC2 API
 import hmac
@@ -86,6 +85,7 @@ from salt._compat import ElementTree as ET
 
 # Import salt.cloud libs
 import salt.utils.cloud
+from salt.utils.serializers import silas
 import salt.config as config
 from salt.cloud.libcloudfuncs import *   # pylint: disable=W0614,W0401
 from salt.cloud.exceptions import (
@@ -1646,7 +1646,7 @@ def create_attach_volumes(name, kwargs, call=None):
         kwargs['instance_id'] = _get_node(name)['instanceId']
 
     if type(kwargs['volumes']) is str:
-        volumes = yaml.safe_load(kwargs['volumes'])
+        volumes = silas.deserialize(kwargs['volumes'])
     else:
         volumes = kwargs['volumes']
 

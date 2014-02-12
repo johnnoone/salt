@@ -31,9 +31,7 @@ import salt.loader
 import salt.utils
 import salt.utils.cloud
 from salt.utils import context
-
-# Import third party libs
-import yaml
+from salt.utils.serializers import silas
 
 # Get logging started
 log = logging.getLogger(__name__)
@@ -1188,9 +1186,9 @@ class Map(Cloud):
             temp_ = Template(fp.read())
             # render as yaml
             yaml_str_ = temp_.render()
-            map_ = yaml.safe_load(yaml_str_)
+            map_ = silas.deserialize(yaml_str_)
         except MakoException:
-            map_ = yaml.safe_load(fp.read())
+            map_ = silas.deserialize(fp)
         return map_
 
     def read(self):
@@ -1211,7 +1209,7 @@ class Map(Cloud):
                 if MAKO_AVAILABLE:
                     map_ = self._mako_read(fp_)
                 else:
-                    map_ = yaml.safe_load(fp_.read())
+                    map_ = silas.deserialize(fp_)
         except Exception as exc:
             log.error(
                 'Rendering map {0} failed, render error:\n{1}'.format(

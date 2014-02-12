@@ -46,7 +46,6 @@ import logging
 import base64
 import pprint
 import inspect
-import yaml
 
 # Import generic libcloud functions
 from salt.cloud.libcloudfuncs import *   # pylint: disable=W0614,W0401
@@ -56,6 +55,7 @@ import salt.utils.cloud
 import salt.config as config
 from salt.utils import namespaced_function
 from salt.utils.cloud import is_public_ip
+from salt.utils.serializers import silas
 from salt.cloud.exceptions import (
     SaltCloudSystemExit,
     SaltCloudExecutionFailure,
@@ -838,7 +838,7 @@ def avail_images(call=None):
     result.close()
 
     ret = {}
-    for image in yaml.safe_load(content):
+    for image in silas.deserialize(content):
         ret[image['name']] = image
     return ret
 
@@ -1059,7 +1059,7 @@ def query(action=None, command=None, args=None, method='GET', data=None,
         content = result.read()
         result.close()
 
-        data = yaml.safe_load(content)
+        data = silas.deserialize(content)
         return data
     except urllib2.URLError as exc:
         log.error(
@@ -1148,7 +1148,7 @@ def query2(action=None, command=None, args=None, method='GET', location=None,
         if 'content-length' in result.headers:
             content = result.read()
             result.close()
-            return_content = yaml.safe_load(content)
+            return_content = silas.deserialize(content)
 
         return [result.getcode(), return_content]
 
