@@ -13,12 +13,7 @@ import urlparse
 from copy import deepcopy
 
 # import third party libs
-import yaml
-try:
-    yaml.Loader = yaml.CLoader
-    yaml.Dumper = yaml.CDumper
-except Exception:
-    pass
+from salt.utils.serializers import silas, DeserializationError
 
 # Import salt libs
 import salt.crypt
@@ -505,8 +500,8 @@ def _read_conf_file(path):
     log.debug('Reading configuration from {0}'.format(path))
     with salt.utils.fopen(path, 'r') as conf_file:
         try:
-            conf_opts = yaml.safe_load(conf_file.read()) or {}
-        except yaml.YAMLError as err:
+            conf_opts = silas.deserialize(conf_file) or {}
+        except DeserializationError as err:
             log.error(
                 'Error parsing configuration file: {0} - {1}'.format(path, err)
             )
