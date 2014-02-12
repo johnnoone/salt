@@ -9,9 +9,7 @@ import logging
 # Import salt libs
 import salt.utils
 from salt._compat import string_types
-
-# Import third party libs
-import yaml
+from salt.utils.serializers import silas
 
 
 # Set up logging
@@ -34,7 +32,7 @@ def ext_pillar(minion_id, pillar, conf):
         if isinstance(val, string_types):
             cmd += ' {0}={1!r}'.format(key, val)
     try:
-        data = yaml.safe_load(__salt__['cmd.run'](cmd))
+        data = silas.deserialize(__salt__['cmd.run'](cmd))
     except Exception:
         log.critical(
                 'Hiera YAML data failed to parse from conf {0}'.format(conf)

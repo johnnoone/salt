@@ -9,8 +9,8 @@ Execute an unmodified puppet_node_classifier and read the output as YAML. The YA
 # Import python libs
 import logging
 
-# Import third party libs
-import yaml
+# Import salt libs
+from salt.utils.serializers import silas
 
 # Set up logging
 log = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ def ext_pillar(minion_id, pillar, command):
     Execute an unmodified puppet_node_classifier and read the output as YAML
     '''
     try:
-        data = yaml.safe_load(__salt__['cmd.run']('{0} {1}'.format(command, minion_id)))
+        data = silas.deserialize(__salt__['cmd.run']('{0} {1}'.format(command, minion_id)))
         data = data['parameters']
         return data
     except Exception:

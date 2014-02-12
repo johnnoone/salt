@@ -9,8 +9,8 @@ Execute a command and read the output as YAML. The YAML data is then directly ov
 # Import python libs
 import logging
 
-# Import third party libs
-import yaml
+# Import salt libs
+from salt.utils.serializers import silas
 
 # Set up logging
 log = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ def ext_pillar(minion_id, pillar, command):
     Execute a command and read the output as YAML
     '''
     try:
-        return yaml.safe_load(__salt__['cmd.run']('{0}'.format(command)))
+        return silas.deserialize(__salt__['cmd.run']('{0}'.format(command)))
     except Exception:
         log.critical(
                 'YAML data from {0} failed to parse'.format(command)

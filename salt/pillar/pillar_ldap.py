@@ -17,9 +17,9 @@ import logging
 
 # Import salt libs
 from salt.exceptions import SaltInvocationError
+from salt.utils.serializers import silas
 
 # Import third party libs
-import yaml
 from jinja2 import Environment, FileSystemLoader
 try:
     import ldap  # pylint: disable=W0611
@@ -158,7 +158,7 @@ def ext_pillar(minion_id, pillar, config_file):
         try:
             #open(config_file, 'r') as raw_config:
             config = _render_template(config_file) or {}
-            opts = yaml.safe_load(config) or {}
+            opts = silas.deserialize(config) or {}
             opts['conf_file'] = config_file
         except Exception as err:
             import salt.log
