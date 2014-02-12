@@ -293,8 +293,7 @@ class SerializerExtension(Extension, object):
         return Markup(json.dumps(value, sort_keys=True).strip())
 
     def format_yaml(self, value):
-        return Markup(silas.serialize(value, default_flow_style=True,
-                                      Dumper=OrderedDictDumper).strip())
+        return Markup(silas.serialize(value, default_flow_style=True))
 
     def format_python(self, value):
         return Markup(pprint.pformat(value).strip())
@@ -304,7 +303,7 @@ class SerializerExtension(Extension, object):
             value = str(value)
         try:
             return silas.deserialize(value)
-        except AttributeError:
+        except DeserializationError:
             raise TemplateRuntimeError(
                     'Unable to load yaml from {0}'.format(value))
 
