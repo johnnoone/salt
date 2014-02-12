@@ -15,12 +15,13 @@ import time
 import multiprocessing
 import re
 import logging
-import yaml
+
 
 # Import salt libs
 import salt.client.ssh.shell
 import salt.client.ssh.wrapper
 import salt.utils
+from salt.utils.serializers import silas
 import salt.utils.thin
 import salt.utils.verify
 import salt.utils.event
@@ -445,7 +446,7 @@ class Single(object):
                 'sudo': sudo,
                 'tty': tty}
         self.shell = salt.client.ssh.shell.Shell(opts, **args)
-        self.minion_config = yaml.dump(
+        self.minion_config = silas.serialize(
                 {
                     'root_dir': '/tmp/.salt/running_data',
                     'id': self.id,

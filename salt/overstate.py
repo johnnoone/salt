@@ -17,9 +17,7 @@ import os
 # Import salt libs
 import salt.client
 import salt.utils
-
-# Import third party libs
-import yaml
+from salt.utils.serializers import silas
 
 
 class OverState(object):
@@ -51,7 +49,7 @@ class OverState(object):
             with salt.utils.fopen(overstate) as fp_:
                 try:
                     # TODO Use render system
-                    return self.__sort_stages(yaml.safe_load(fp_))
+                    return self.__sort_stages(silas.deserialize(fp_))
                 except Exception:
                     return {}
         if self.saltenv not in self.opts['file_roots']:
@@ -66,7 +64,7 @@ class OverState(object):
             with salt.utils.fopen(fn_) as fp_:
                 try:
                     # TODO Use render system
-                    return self.__sort_stages(yaml.safe_load(fp_))
+                    return self.__sort_stages(silas.deserialize(fp_))
                 except Exception:
                     return {}
         return {}

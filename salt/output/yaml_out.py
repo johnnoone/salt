@@ -4,8 +4,8 @@ Output data in YAML, this outputter defaults to printing in YAML block mode
 for better readability.
 '''
 
-# Import third party libs
-import yaml
+# Import salt libs
+from salt.utils.serializers import silas
 
 # Import salt libs
 from salt.utils.yamldumper import OrderedDumper
@@ -34,4 +34,4 @@ def output(data):
     else:  # no indentation
         params.update(default_flow_style=True,
                       indent=0)
-    return yaml.dump(data, **params)
+    return silas.serialize(data, **params)

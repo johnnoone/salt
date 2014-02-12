@@ -7,6 +7,8 @@
 from __future__ import absolute_import
 
 import yaml
+from yaml.constructor import ConstructorError
+from yaml.scanner import ScannerError
 
 from salt.utils.serializers import DeserializationError
 
@@ -23,8 +25,14 @@ def deserialize(stream_or_string, **options):
     options.setdefault('Loader', Loader)
     try:
         return yaml.load(stream_or_string, **options)
-    except Exception as e:
-        raise DeserializationError(e)
+    except ScannerError as error:
+        err_type = ERROR_MAP.get(error.problem, 'Unknown yaml render error')
+        line_num = error.problem_mark.line + 1
+        raise DeserializationError(err_type, line_num, exc.problem_mark.buffer)
+    except ConstructorError as error:
+        raise DeserializationError(error)
+    except Exception as error:
+        raise DeserializationError(error)
 
 
 def serialize(obj, **options):

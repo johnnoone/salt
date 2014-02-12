@@ -15,6 +15,7 @@ import logging
 import yaml
 from yaml.nodes import MappingNode
 from yaml.constructor import ConstructorError
+from yaml.scanner import ScannerError
 
 from salt._compat import string_types
 from salt.utils.serializers import DeserializationError

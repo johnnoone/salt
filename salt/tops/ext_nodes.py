@@ -23,9 +23,8 @@ information that is used by a Salt top file.
 # Import python libs
 import subprocess
 
-# Import third party libs
-import yaml
-
+# Import salt libs
+from salt.utils.serializers import silas
 
 def __virtual__():
     '''
@@ -46,7 +45,7 @@ def top(**kwargs):
             __opts__['master_tops']['ext_nodes'],
             kwargs['opts']['id']
             )
-    ndata = yaml.safe_load(
+    ndata = silas.deserialize(
             subprocess.Popen(
                 cmd,
                 shell=True,

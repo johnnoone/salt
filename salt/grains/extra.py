@@ -3,11 +3,11 @@
 import os
 
 # Import third party libs
-import yaml
 import logging
 
 # Import salt libs
 import salt.utils
+from salt.utils.serializers import silas
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def config():
     if os.path.isfile(gfn):
         with salt.utils.fopen(gfn, 'rb') as fp_:
             try:
-                return yaml.safe_load(fp_.read())
+                return silas.deserialize(fp_)
             except Exception:
                 log.warn("Bad syntax in grains file! Skipping.")
                 return {}

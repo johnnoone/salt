@@ -27,7 +27,6 @@ import sys
 
 # Import third party libs
 import zmq
-import yaml
 from M2Crypto import RSA
 
 # Import salt libs
@@ -51,6 +50,7 @@ import salt.utils.verify
 import salt.utils.minions
 import salt.utils.gzip_util
 from salt.utils.debug import enable_sigusr1_handler, enable_sigusr2_handler, inspect_stack
+from salt.utils.serializers import silas
 from salt.exceptions import MasterExit
 from salt.utils.event import tagify
 from salt.pillar import git_pillar
@@ -838,7 +838,7 @@ class AESFuncs(object):
                            '').format(self.opts['external_nodes']))
                 return {}
             cmd = '{0} {1}'.format(self.opts['external_nodes'], load['id'])
-            ndata = yaml.safe_load(
+            ndata = silas.deserialize(
                     subprocess.Popen(
                         cmd,
                         shell=True,

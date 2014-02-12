@@ -30,7 +30,6 @@ try:
 except ImportError:
     # Running in local, zmq not needed
     HAS_ZMQ = False
-import yaml
 
 HAS_RANGE = False
 try:
@@ -65,6 +64,7 @@ import salt.utils
 import salt.payload
 import salt.utils.schedule
 import salt.utils.event
+from salt.utils.serializers import silas
 
 from salt._compat import string_types
 from salt.utils.debug import enable_sigusr1_handler
@@ -203,7 +203,7 @@ def parse_args_and_kwargs(func, args, data=None):
 
 def yamlify_arg(arg):
     '''
-    yaml.safe_load the arg unless it has a newline in it.
+    silas.deserialize the arg unless it has a newline in it.
     '''
     if not isinstance(arg, string_types):
         return arg
@@ -215,7 +215,7 @@ def yamlify_arg(arg):
                 # it will be interpreted as a comment.
                 return arg
             if '\n' not in arg:
-                arg = yaml.safe_load(arg)
+                arg = silas.deserialize(arg)
         if isinstance(arg, dict):
             # dicts must be wrapped in curly braces
             if (isinstance(original_arg, string_types) and
@@ -224,10 +224,10 @@ def yamlify_arg(arg):
             else:
                 return arg
         elif isinstance(arg, (int, list, string_types)):
-            # yaml.safe_load will load '|' as '', don't let it do that.
+            # silas.deserialize will load '|' as '', don't let it do that.
             if arg == '' and original_arg in ('|',):
                 return original_arg
-            # yaml.safe_load will treat '#' as a comment, so a value of '#'
+            # silas.deserialize will treat '#' as a comment, so a value of '#'
             # will become None. Keep this value from being stomped as well.
             elif arg is None and original_arg.strip().startswith('#'):
                 return original_arg

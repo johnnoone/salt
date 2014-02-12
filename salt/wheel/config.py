@@ -6,12 +6,9 @@ Manage the master configuration file
 # Import python libs
 import os
 
-# Import third party libs
-import yaml
-
 # Import salt libs
 import salt.config
-
+from salt.utils.serializers import silas
 
 def values():
     '''
@@ -37,4 +34,4 @@ def apply(key, value):
     data = values()
     data[key] = value
     with salt.utils.fopen(path, 'w+') as fp_:
-        fp_.write(yaml.dump(data, default_flow_style=False))
+        fp_.write(silas.serialize(data, default_flow_style=False))

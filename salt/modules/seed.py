@@ -103,7 +103,7 @@ def apply_(path, id_=None, config=None, approve_key=True, install=True):
     # Write the new minion's config to a tmp file
     tmp_config = os.path.join(tmp, 'minion')
     with salt.utils.fopen(tmp_config, 'w+') as fp_:
-        fp_.write(yaml.serialize(config, default_flow_style=False))
+        fp_.write(silas.serialize(config, default_flow_style=False))
 
     # Generate keys for the minion
     salt.crypt.gen_keys(tmp, 'minion', 2048)
