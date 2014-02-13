@@ -10,8 +10,11 @@ import yaml
 
 from salt.utils.serializers import DeserializationError
 
-__all__ = ['deserialize', 'serialize']
+__all__ = ['deserialize', 'serialize', 'available']
 
+available = True
+
+# prefer C bindings over python when available
 Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
 Dumper = getattr(yaml, 'CSafeDumper', yaml.SafeDumper)
 

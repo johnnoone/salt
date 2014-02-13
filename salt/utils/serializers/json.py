@@ -14,7 +14,9 @@ except ImportError:
 from salt._compat import string_types
 from salt.utils.serializers import DeserializationError
 
-__all__ = ['deserialize', 'serialize']
+__all__ = ['deserialize', 'serialize', 'available']
+
+available = True
 
 
 def deserialize(stream_or_string, **options):

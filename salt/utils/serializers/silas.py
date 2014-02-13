@@ -3,8 +3,10 @@
     salt.utils.serializers.silas
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    SLS is an extension of YAML that imply omap for any dict like.
-    This allows to make things like sls file more intuitive.
+    Silas is a format that allows to make things like sls file more intuitive.
+
+    It's an extension of YAML that implements all the salt magic.
+    For example it implies omap for any dict like.
 '''
 
 from __future__ import absolute_import
@@ -18,10 +20,13 @@ from salt._compat import string_types
 from salt.utils.serializers import DeserializationError
 from salt.utils.odict import OrderedDict
 
-__all__ = ['deserialize', 'serialize']
+__all__ = ['deserialize', 'serialize', 'available']
 
 log = logging.getLogger(__name__)
 
+available = True
+
+# prefer C bindings over python when available
 Loader = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
 Dumper = getattr(yaml, 'CSafeDumper', yaml.SafeDumper)
 

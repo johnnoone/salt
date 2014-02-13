@@ -6,10 +6,14 @@ from salttesting.helpers import ensure_in_syspath
 ensure_in_syspath('../../')
 
 # Import salt libs
-from salt.utils.serializers import json, silas, yaml
+from salt.utils.serializers import json, silas, yaml, msgpack
 from salt.utils.odict import OrderedDict
 
+SKIP_MESSAGE = '%s is unavailable, do prerequisites have been met?'
+
+
 class TestSerializers(TestCase):
+    @skipIf(not json.available, SKIP_MESSAGE % 'json')
     def test_serialize_json(self):
         data = {
             "foo": "bar"
@@ -20,6 +24,7 @@ class TestSerializers(TestCase):
         deserialized = json.deserialize(serialized)
         assert deserialized == data, deserialized
 
+    @skipIf(not yaml.available, SKIP_MESSAGE % 'yaml')
     def test_serialize_yaml(self):
         data = {
             "foo": "bar"
@@ -30,6 +35,7 @@ class TestSerializers(TestCase):
         deserialized = yaml.deserialize(serialized)
         assert deserialized == data, deserialized
 
+    @skipIf(not yaml.available, SKIP_MESSAGE % 'silas')
     def test_serialize_silas(self):
         data = {
             "foo": "bar"
@@ -40,6 +46,7 @@ class TestSerializers(TestCase):
         deserialized = silas.deserialize(serialized)
         assert deserialized == data, deserialized
 
+    @skipIf(not silas.available, SKIP_MESSAGE % 'silas')
     def test_serialize_complex_silas(self):
         data = OrderedDict([
             ("foo", 1),
@@ -52,6 +59,16 @@ class TestSerializers(TestCase):
         deserialized = silas.deserialize(serialized)
         assert deserialized == data, deserialized
 
+    @skipIf(not msgpack.available, SKIP_MESSAGE % 'msgpack')
+    def test_msgpack(self):
+        data = OrderedDict([
+            ("foo", 1),
+            ("bar", 2),
+            ("baz", True),
+        ])
+        serialized = msgpack.serialize(data)
+        deserialized = msgpack.deserialize(serialized)
+        assert deserialized == data, deserialized
 
 if __name__ == '__main__':
     from integration import run_tests
