@@ -18,11 +18,8 @@ Example output::
           - World
 '''
 
-# Import third party libs
-import yaml
-
 # Import salt libs
-from salt.utils.yamldumper import OrderedDumper
+from salt.utils.serializers import yamlex
 
 # Define the module's virtual name
 __virtualname__ = 'yaml'
@@ -37,7 +34,7 @@ def output(data):
     Print out YAML using the block mode
     '''
 
-    params = dict(Dumper=OrderedDumper)
+    params = {}
     if 'output_indent' not in __opts__:
         # default indentation
         params.update(default_flow_style=False)
@@ -46,6 +43,5 @@ def output(data):
         params.update(default_flow_style=False,
                       indent=__opts__['output_indent'])
     else:  # no indentation
-        params.update(default_flow_style=True,
-                      indent=0)
-    return yaml.dump(data, **params)
+        params.update(default_flow_style=True, indent=0)
+    return yamlex.serialize(data, **params)

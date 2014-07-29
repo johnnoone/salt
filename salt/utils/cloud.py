@@ -41,7 +41,7 @@ import salt.utils.event
 from salt import syspaths
 from salt.utils import vt
 from salt.utils.nb_popen import NonBlockingPopen
-from salt.utils.yamldumper import SafeOrderedDumper
+from salt.utils.serializers import yamlex
 from salt.utils.validate.path import is_writeable
 
 # Import salt cloud libs
@@ -57,7 +57,6 @@ from salt.cloud.exceptions import (
 
 # Import third party libs
 from jinja2 import Template
-import yaml
 
 try:
     import getpass
@@ -257,10 +256,9 @@ def salt_config_to_yaml(configuration, line_break='\n'):
     '''
     Return a salt configuration dictionary, master or minion, as a yaml dump
     '''
-    return yaml.dump(configuration,
-                     line_break=line_break,
-                     default_flow_style=False,
-                     Dumper=SafeOrderedDumper)
+    return yamlex.serialize(configuration,
+                            line_break=line_break,
+                            default_flow_style=False)
 
 
 def bootstrap(vm_, opts):
