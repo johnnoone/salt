@@ -40,7 +40,7 @@ def deserialize(stream_or_string, **options):
     :param options: options given to lower yaml module.
     """
 
-    options.setdefault('Loader', BaseLoader)
+    options.setdefault('Loader', Loader)
     try:
         return yaml.load(stream_or_string, **options)
     except ScannerError as error:
@@ -63,7 +63,7 @@ def serialize(obj, **options):
     :param options: options given to lower yaml module.
     """
 
-    options.setdefault('Dumper', BaseDumper)
+    options.setdefault('Dumper', Dumper)
     try:
         response = yaml.dump(obj, **options)
         if response.endswith('\n...\n'):
