@@ -235,20 +235,18 @@ A more complex ``recurse`` example:
 
 # Import python libs
 import difflib
-import json
 import logging
 import os
 import pprint
 import shutil
 import traceback
-import yaml
 
 # Import salt libs
 import salt.utils
 import salt.utils.templates
 from salt.exceptions import CommandExecutionError
-from salt.utils.serializers import yaml as yaml_serializer
-from salt.utils.serializers import json as json_serializer
+from salt.utils.serializers import yamlex
+from salt.utils.serializers import json
 from salt._compat import string_types, integer_types
 
 log = logging.getLogger(__name__)
@@ -3709,9 +3707,9 @@ def serialize(name,
     if merge_if_exists:
         if os.path.isfile(name):
             if formatter == 'yaml':
-                existing_data = yaml.safe_load(file(name, 'r'))
+                existing_data = yamlex.deserialize(open(name, 'r'))
             elif formatter == 'json':
-                existing_data = json.load(file(name, 'r'))
+                existing_data = json.deserialize(open(name, 'r'))
             else:
                 return {'changes': {},
                         'comment': ('{0} format is not supported for merging'
@@ -3729,21 +3727,20 @@ def serialize(name,
                 dataset = existing_data
 
     if formatter == 'yaml':
-        contents = yaml_serializer.serialize(dataset,
-                                             default_flow_style=False)
+        contents = yamlex.serialize(dataset, default_flow_style=False)
     elif formatter == 'json':
-        contents = json_serializer.serialize(dataset,
-                                             indent=2,
-                                             separators=(',', ': '),
-                                             sort_keys=True)
+        contents = json.serialize(dataset,
+                                  indent=2,
+                                  separators=(',', ': '),
+                                  sort_keys=True)
     elif formatter == 'python':
         # round-trip this through JSON to avoid OrderedDict types
         # there's probably a more performant way to do this...
         # TODO remove json round-trip when all dataset will use
         # utils.serializers
         contents = pprint.pformat(
-            json.loads(
-                json.dumps(dataset),
+            json.deserialize(
+                json.serialize(dataset),
                 object_hook=salt.utils.decode_dict
             )
         )
