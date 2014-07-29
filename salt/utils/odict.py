@@ -293,6 +293,14 @@ except ImportError:
 #        ## end of http://code.activestate.com/recipes/576693/ }}}
 
 
+class OrderedDict(OrderedDict):
+    def __hash__(self):
+        """
+        Salt OrderedDict are hashable.
+        """
+        return id(self)
+
+
 class DefaultOrderedDict(OrderedDict):
     'Dictionary that remembers insertion order and '
     def __init__(self, default_factory=None, *a, **kw):

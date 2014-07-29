@@ -73,13 +73,6 @@ STATE_INTERNAL_KEYWORDS = frozenset([
 ])
 
 
-def _odict_hashable(self):
-    return id(self)
-
-
-OrderedDict.__hash__ = _odict_hashable
-
-
 def split_low_tag(tag):
     '''
     Take a low tag and split it back into the low dict that it came from
