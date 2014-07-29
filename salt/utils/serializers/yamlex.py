@@ -339,24 +339,30 @@ class SLSMap(OrderedDict):
 
 class SLSString(str):
     '''
-    Ensures that str str() and repr() are YAML friendly.
+    Ensures YAML friendly representation.
 
     .. code-block:: python
 
         >>> scalar = str('foo')
-        >>> print 'foo'
+        >>> print(scalar)
         foo
 
-        >>> sls_scalar = SLSMap(scalar)
-        >>> print sls_scalar
+        >>> sls_scalar = SLSString(scalar)
+        >>> print(scalar)
+        foo
+        >>> print(scalar.serialized)
         "foo"
 
     '''
 
-    def __str__(self):
-        return serialize(self, default_style='"')
+    # def __str__(self):
+    #     return serialize(self, default_style='"')
 
-    def __repr__(self):
+    # def __repr__(self):
+    #     return serialize(self, default_style='"')
+
+    @property
+    def serialized(self):
         return serialize(self, default_style='"')
 
 
