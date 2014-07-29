@@ -158,8 +158,8 @@ for comb in '''
     json_mako
     json_wempy
     yamlex_jinja
-    yamlexyamlex_mako
-    yamlexyamlex_wempy
+    yamlex_mako
+    yamlex_wempy
     '''.strip().split():
 
     fmt, tmpl = comb.split('_')
